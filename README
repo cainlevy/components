@@ -1,0 +1,17 @@
+= Components
+
+This plugin attempts to implement components in the simplest, cleanest, fastest way possible. Inspired by the Cells plugin (http://cells.rubyforge.org) by Nick Sutterer and Peter Bex.
+
+== Components _should not_ simply embed existing controller actions.
+
+Re-using existing controller actions introduces intractable performance problems related to redundant controller filters and duplicated request-cached variables.
+
+== Components _should not_ have the concept of a "request" or "current user".
+
+Everything should be provided as an argument to the component - it should not have direct access to the session, the params, or any other aspect of the request. It also means that components will never intelligently respond_to :html, :js, :xml, etc.
+
+== Components _should_ complement RESTful controller design.
+
+The path of least resistance in Rails includes RESTful controller design to reduce code redundancy. Components should only be designed for use cases where RESTful controller design is either awkward or impossible. This compatibility will reduce the maintenance effort for components and help them grow with Rails itself.
+
+Copyright (c) 2008 Lance Ivy, released under the MIT license

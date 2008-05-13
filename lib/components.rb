@@ -26,7 +26,7 @@ module Components #:nodoc:
     #     end
     #   end
     def component(name, *args)
-      Components.render(name, args, :form_authenticity_token => form_authenticity_token)
+      Components.render(name, args, :form_authenticity_token => (form_authenticity_token if protect_against_forgery?))
     end
   end
 
@@ -48,7 +48,7 @@ module Components #:nodoc:
     #     end
     #   end
     def component(name, *args)
-      Components.render(name, args, :form_authenticity_token => form_authenticity_token)
+      Components.render(name, args, :form_authenticity_token => (form_authenticity_token if protect_against_forgery?))
     end
   end
 end

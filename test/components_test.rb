@@ -20,4 +20,22 @@ class ComponentsTest < Test::Unit::TestCase
     assert_equal "child/one",  Components.render("child/one")
     assert_equal "parent/two", Components.render("child/two")
   end
+
+  def test_links_in_views
+    rendered = Components.render("rich_view/linker", "http://example.com")
+    assert_select rendered, "a[href=http://example.com]"
+  end
+
+  def test_url_for_in_views
+    assert_nothing_raised do
+      ActionController::Routing::RouteSet.any_instance.stubs(:generate).returns("some_url")
+      Components.render("rich_view/urler")
+    end
+  end
+
+  protected
+
+  def assert_select(content, *args)
+    super(HTML::Document.new(content).root, *args)
+  end
 end

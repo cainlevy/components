@@ -6,6 +6,8 @@ module Components
   end
 
   class Base
+    include ActionController::UrlWriter
+
     class << self
       def view_paths
         if read_inheritable_attribute(:view_paths).nil?

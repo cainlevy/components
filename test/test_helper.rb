@@ -1,11 +1,12 @@
 # fake the rails root
 RAILS_ROOT = File.dirname(__FILE__)
 
-# testing support libraries
+# require support libraries
 require 'test/unit'
 require 'rubygems'
 require 'active_support'
 require 'action_controller'
+require 'action_controller/test_process' # for the assertions
 require 'action_view'
 require 'logger'
 require 'mocha'

@@ -2,15 +2,78 @@
 
 This plugin attempts to implement components in the simplest, cleanest, fastest way possible. Inspired by the Cells plugin (http://cells.rubyforge.org) by Nick Sutterer and Peter Bex.
 
-== Components _should not_ simply embed existing controller actions.
+A component can be thought of as a very lightweight controller with supporting view templates. The difference between a component "controller" and a Rails controller is that the component controller's methods are very much normal methods - they accept arguments, and they return a string. There is no magical auto-rendering, and there is no access to data that is not a) in the arguments or b) in the database. For example, there is no access to the request, the request parameters, or the session. This is designed to encourage good design and reuse of components, and to ensure that they don't take over the request/response job of your Rails controllers.
 
-Re-using existing controller actions introduces intractable performance problems related to redundant controller filters and duplicated request-cached variables.
+Speaking imprecisely, components prepare for and then render templates.
 
-== Components _should not_ have the concept of a "request" or "current user".
+== Usage
 
-Everything should be provided as an argument to the component - it should not have direct access to the session, the params, or any other aspect of the request. It also means that components will never intelligently respond_to :html, :js, :xml, etc.
+Note that these examples are very simplistic and would be better implemented using Rails partials.
 
-== Components _should_ complement RESTful controller design.
+=== Generator
+
+Running `script/generator users details` will create a UsersComponent with a "details" view. You might then flesh out the templates like this:
+
+  class UsersComponent < Components::Base
+    def details(user_or_id)
+      @user = user_or_id.is_a?(User) ? user_or_id : User.find(user_or_id)
+      render
+    end
+  end
+
+=== From ActionController
+
+  class UsersController < ApplicationController
+    def show
+      return :text => component("users/detail", params[:id])
+    end
+  end
+
+=== From ActionView
+
+  <%= component "users/detail", @user %>
+
+== More Features
+
+=== Inherited Views
+
+Assume two components:
+
+  class ParentComponent < Components::Base
+    def one
+      render
+    end
+
+    def two
+      render
+    end
+  end
+
+  class ChildComponent < ParentComponent
+    def one
+      render
+    end
+
+    def three
+      render "one"
+    end
+  end
+
+Both methods on the ChildComponent class would first try and render "/app/components/child/one.erb", and if that file did not exist, would render "/app/components/parent/one.erb".
+
+== Components Philosophy
+
+I wrote this components plugin after evaluating a couple of existing ones, reflecting a bit, and either stealing or composing the following principles. I welcome all debate on the subject.
+
+=== Components <em>should not</em> simply embed existing controller actions.
+
+Re-using existing controller actions introduces intractable performance problems related to redundant controller filters and duplicate request-cached variables.
+
+=== Components <em>should not</em> have the concept of a "request" or "current user".
+
+Everything should be provided as an argument to the component - it should not have direct access to the session, the params, or any other aspect of the request. This means that components will never intelligently respond_to :html, :js, :xml, etc.
+
+=== Components _should_ complement RESTful controller design.
 
 The path of least resistance in Rails includes RESTful controller design to reduce code redundancy. Components should only be designed for use cases where RESTful controller design is either awkward or impossible. This compatibility will reduce the maintenance effort for components and help them grow with Rails itself.
 

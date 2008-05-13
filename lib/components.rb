@@ -55,3 +55,9 @@ end
 
 ActionController::Base.class_eval do include Components::ActionController end
 ActionView::Base.class_eval       do include Components::ActionView       end
+
+unless ActionView::Base.instance_methods.include?("file_exists?")
+  ActionView::Base.class_eval do
+    delegate :file_exists?, :to => :finder
+  end
+end

@@ -3,6 +3,10 @@ class RichViewComponent < Components::Base
     render
   end
 
+  def form
+    render
+  end
+
   def linker(url)
     @url = url
     render

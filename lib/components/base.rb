@@ -1,7 +1,7 @@
 module Components
   class Base
     include ::ActionController::UrlWriter
-    include Components::Helpers
+    include ::ActionController::Helpers
 
     # for request forgery protection compatibility
     attr_accessor :form_authenticity_token #:nodoc:
@@ -23,9 +23,10 @@ module Components
         read_inheritable_attribute(:view_paths)
       end
 
-      def name #:nodoc:
-        @name ||= self.to_s.underscore.sub("_component", "")
+      def path #:nodoc:
+        @path ||= self.to_s.sub("Component", "").underscore
       end
+      alias_method :controller_path, :path
     end
 
     # must be public for access from ActionView
@@ -68,12 +69,12 @@ module Components
       # pick the closest parent component with the file
       component = self.class
       unless file.include?("/")
-        until template.file_exists? "#{component.name}/#{file}" or component.superclass == Components::Base
+        until template.file_exists? "#{component.path}/#{file}" or component.superclass == Components::Base
           component = component.superclass
         end
       end
 
-      template.render("#{component.name}/#{file}")
+      template.render("#{component.path}/#{file}")
     end
 
     # creates and returns a view object for rendering the current action.
@@ -96,7 +97,7 @@ module Components
 
     # should name all of the instance variables used by Components::Base that should _not_ be accessible from the view.
     def unassignable_instance_variables #:nodoc:
-      %w(@component_name @template)
+      %w(@template @assigns_for_view)
     end
   end
 end

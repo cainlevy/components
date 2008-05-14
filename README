@@ -35,6 +35,12 @@ Running `script/generator users details` will create a UsersComponent with a "de
 
 == More Features
 
+=== Helpers
+
+All of the standard helper functionality exists for components. You may define a method on your component controller and use :helper_method to make it available in your views, or you may use :helper to add entire modules of extra methods to your views.
+
+Be careful importing existing helpers, though, as some of them may try and break encapsulation by reading from the session, the request, or the params. You may need to rewrite these helpers so they accept the necessary information as arguments.
+
 === Inherited Views
 
 Assume two components:

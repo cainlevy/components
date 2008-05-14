@@ -42,7 +42,6 @@ class ComponentsTest < Test::Unit::TestCase
 
   def test_helper_methods
     assert_equal "jingleheimer", Components.render("hello_world/say_it_with_help", ["jingleheimer"])
-    assert_raises NoMethodError do HelloWorldComponent.send(:helper) end
   end
 
   protected

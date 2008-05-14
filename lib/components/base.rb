@@ -1,6 +1,7 @@
 module Components
   class Base
     include ::ActionController::UrlWriter
+    include Components::Helpers
 
     # for request forgery protection compatibility
     attr_accessor :form_authenticity_token #:nodoc:
@@ -78,7 +79,11 @@ module Components
     # creates and returns a view object for rendering the current action.
     # note that this freezes knowledge of view_paths and assigns.
     def template #:nodoc:
-      @template ||= Components::View.new(self.class.view_paths, assigns_for_view, self)
+      if @template.nil?
+        @template = Components::View.new(self.class.view_paths, assigns_for_view, self)
+        @template.extend self.class.master_helper_module
+      end
+      @template
     end
 
     # should return a hash of all instance variables to assign to the view

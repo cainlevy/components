@@ -3,6 +3,7 @@ module Components #:nodoc:
     klass, method = name.split('/')
     component = (klass + "_component").camelcase.constantize.new
     component.form_authenticity_token = options[:form_authenticity_token]
+    component.logger.debug "Rendering component #{name}"
     component.send(method, *component_args).to_s
   end
 

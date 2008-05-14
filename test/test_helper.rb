@@ -13,6 +13,8 @@ require 'mocha'
 
 RAILS_DEFAULT_LOGGER = Logger.new(File.dirname(__FILE__) + '/debug.log')
 
-Dependencies.load_paths << File.dirname(__FILE__) + '/../lib/'
+%w(../lib app/controllers).each do |load_path|
+  Dependencies.load_paths << File.dirname(__FILE__) + "/" + load_path
+end
 require File.dirname(__FILE__) + '/../init'
 

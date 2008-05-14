@@ -36,6 +36,9 @@ module Components
 
     protected
 
+    # See Components::ActionController#standard_component_options
+    def standard_component_options; end
+
     # When the string your component must return is complex enough to warrant a template file,
     # this will render that file and return the result. Any template engine (erb, haml, etc.)
     # that ActionView is capable of using can be used for templating.

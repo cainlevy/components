@@ -6,7 +6,16 @@ module Components #:nodoc:
     component.send(method, *component_args).to_s
   end
 
+  def self.merge_standard_component_options!(args, standard_options)
+    if standard_options
+      args << {} unless args.last.is_a?(Hash)
+      args.last.reverse_merge!(standard_options)
+    end
+  end
+
   module ActionController
+    protected
+
     # Renders the named component with the given arguments. The component name must indicate both
     # the component class and the class' action.
     #
@@ -26,8 +35,21 @@ module Components #:nodoc:
     #     end
     #   end
     def component(name, *args)
+      Components.merge_standard_component_options!(args, standard_component_options)
       Components.render(name, args, :form_authenticity_token => (form_authenticity_token if protect_against_forgery?))
     end
+
+    # Override this method on your controller (probably your ApplicationController)
+    # to define common arguments for your components. For example, you may always
+    # want to provide the current user, in which case you could return {:user =>
+    # current_user} from this method.
+    #
+    # In order to use this, your component actions should accept an options hash
+    # as their last argument.
+    #
+    # I feel like this is a better solution than simply making request and
+    # session details directly available to the components.
+    def standard_component_options; end
   end
 
   module ActionView
@@ -48,6 +70,7 @@ module Components #:nodoc:
     #     end
     #   end
     def component(name, *args)
+      Components.merge_standard_component_options!(args, controller.send(:standard_component_options))
       Components.render(name, args, :form_authenticity_token => (form_authenticity_token if protect_against_forgery?))
     end
   end

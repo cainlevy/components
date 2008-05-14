@@ -67,6 +67,38 @@ Assume two components:
 
 Both methods on the ChildComponent class would first try and render "/app/components/child/one.erb", and if that file did not exist, would render "/app/components/parent/one.erb".
 
+=== Standard Argument Options
+
+You may find yourself constantly needing to pass a standard set of options to each component. If so, you can define a method on your controller that returns a hash of standard options that will be merged with the component arguments and passed to every component.
+
+Suppose a given component:
+
+  class GroupsComponent < Components::Base
+    def details(group_id, options = {})
+      @user = options[:user]
+      @group = Group.find(group_id)
+      render
+    end
+  end
+
+Then the following setup:
+
+  class GroupsController < ApplicationController
+    def show
+      render :text => component("groups/details", params[:id])
+    end
+
+    protected
+
+    def standard_component_options
+      {:user => current_user}
+    end
+  end
+
+Would expand to:
+
+  component("groups/details", params[:id], :user => current_user)
+
 == Components Philosophy
 
 I wrote this components plugin after evaluating a couple of existing ones, reflecting a bit, and either stealing or composing the following principles. I welcome all debate on the subject.

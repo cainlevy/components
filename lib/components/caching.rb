@@ -100,8 +100,11 @@ module Components::Caching
   # TODO: test for consistency in cache key even w. options hashes at the end of args
   def cache_key(action, args = [])
     key = ([self.class.path, action] + args).collect do |arg|
-      # the Hash#to_query is for Rails 2.0 compat
-      arg.is_a?(Hash) ? arg.to_query : arg.to_param
+      case arg
+        when Hash:                arg.to_query # Rails 2.0 compat
+        when ActiveRecord::Base:  "#{arg.class.to_s.underscore}#{arg.id}"
+        else                      arg.to_param
+      end
     end.join('/')
 
     if ActiveSupport.const_defined?("Cache")

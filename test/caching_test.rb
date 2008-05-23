@@ -32,4 +32,16 @@ class CachingTest < Test::Unit::TestCase
     @component.expects(:write_fragment).with("hello_world/say_it/frumpamumpa", "frumpamumpa", nil)
     assert_equal "frumpamumpa", @component.say_it("frumpamumpa")
   end
+
+  def test_expires_in_passthrough
+    @component.say_it_cache_options = {:expires_in => 15.minutes}
+    @component.expects(:write_fragment).with("hello_world/say_it/ninnanana", "ninnanana", {:expires_in => 15.minutes})
+    assert_equal "ninnanana", @component.say_it("ninnanana")
+  end
+
+  def test_versioned_keys
+    @component.say_it_cache_options = {:version => :some_named_method}
+    @component.expects(:some_named_method).with("rangleratta").returns(314)
+    assert_equal "hello_world/say_it/rangleratta/v314", @component.send(:cache_key, :say_it, ["rangleratta"])
+  end
 end

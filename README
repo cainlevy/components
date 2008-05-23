@@ -39,9 +39,7 @@ Running `script/generator users details` will create a UsersComponent with a "de
 
 Any component action may be cached using the fragment caching you've configured on ActionController::Base. The command to cache a component action must come after the definition of the action itself. This is because the caching method wraps the action, which makes the caching work even if you call the action directly.
 
-Cache expiration must either be handled through some TTL option (Rails' :mem_cache_store calls it :expires_in) or a version argument. Support for the latter has not yet been optimized in this plugin, but you can always pass a version counter in the component arguments themselves. Direct key expiration via some method like expire_component is not practical since the keys are so variable and since cache stores like memcache don't keep a list of known keys in memory to iterate through and pattern match against.
-
-For example:
+Example:
 
   class UsersComponent < Components::Base
     def details(user_id)
@@ -51,7 +49,7 @@ For example:
     cache :details, :expires_in => 15.minutes
   end
 
-This will cache the returns from UsersComponent#details using a cache key like "users/details/5", where 5 is the user_id. The cache will only be good for fifteen minutes.
+This will cache the returns from UsersComponent#details using a cache key like "users/details/5", where 5 is the user_id. The cache will only be good for fifteen minutes. See Components::Caching for more information.
 
 === Helpers
 

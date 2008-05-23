@@ -1,4 +1,4 @@
-# Component caching is at a very fine-grained level - a component is cached based on all
+# Component caching is very fine-grained - a component is cached based on all
 # of its arguments. Any more or less would result in inaccurate cache hits.
 #
 # === Howto
@@ -28,23 +28,58 @@
 #
 # I know of three general methods to expire caches:
 #
-#  * TTL: expires a cache after some number of seconds. This works well for content that
-#    is hit frequently but can stand to be a bit stale at times.
-#  * Versioning: caches are never actually expired, rather, they are eventually ignored
-#    when all new cache requests are for a new version. This only works with cache stores
-#    that have some kind of limited cache space, otherwise cache consumption will go
-#    through the metaphorical roof.
-#  * Direct Expiration: caches are expired by name. This does not work when cache keys
-#    have variable elements, or when the complete list of cache keys is not available
-#    or a brute-force regular expression approach.
+# * TTL: expires a cache after some number of seconds. This works well for content that
+#   is hit frequently but can stand to be a bit stale at times.
+# * Versioning: caches are never actually expired, rather, they are eventually ignored
+#   when all new cache requests are for a new version. This only works with cache stores
+#   that have some kind of limited cache space, otherwise cache consumption will go
+#   through the metaphorical roof.
+# * Direct Expiration: caches are expired by name. This does not work when cache keys
+#   have variable elements, or when the complete list of cache keys is not available
+#   or a brute-force regular expression approach.
 #
 # Of those three, direct expiration is not a viable option due to the variable nature of
 # component cache keys. And since both of the remaining methods are best supported by some
 # variation of memcache, that is the officially recommended cache store.
 #
-# TODO: describe how to implement TTL/Versioned expiration
+# ==== TTL Expiration
+#
+# If you are using Rails' :mem_cache_store for fragments, then you can set up TTL-style
+# expiration by specifying an :expires_in option, like so:
+#
+#   class UserComponent < Components::Base
+#     def show(user_id)
+#       @user = User.find(user_id)
+#       render
+#     end
+#     cache :show, :expires_in => 15.minutes
+#   end
+#
+# === Versioned Expiration
+#
+# Maintaining and incrementing version numbers may be implemented any number of ways. To
+# use the version numbers, though, you can specify a :version option, which may either name
+# a method (use a Symbol) or provide a proc. In either case, the method or proc should
+# receive all of the same arguments as the action itself, and should return the version
+# string.
+#
+#   class UserComponent < Components::Base
+#     def show(user_id)
+#       @user = User.find(user_id)
+#       render
+#     end
+#     cache :show, :version => :show_cache_version
+#
+#     protected
+#
+#     def show_cache_version(user_id)
+#       # you may want to find your version from a model object, from memcache, or whereever.
+#       Version.for("users/show", user_id)
+#     end
+#   end
+#
 module Components::Caching
-  def self.included(base)
+  def self.included(base) #:nodoc:
     base.class_eval do
       extend ClassMethods
     end
@@ -71,7 +106,7 @@ module Components::Caching
       self.send("#{action}_cache_options=", cache_options)
     end
 
-    def cache_store
+    def cache_store #:nodoc:
       @cache_store ||= if ActionController::Base.respond_to?(:cache_store)
         # Rails 2.1
         ActionController::Base.cache_store
@@ -84,26 +119,30 @@ module Components::Caching
 
   protected
 
-  def with_caching(action, args, &block)
+  def with_caching(action, args, &block) #:nodoc:
     key = cache_key(action, args)
     cache_options = self.send("#{action}_cache_options")
     read_fragment(key, cache_options) || returning(block.call) { |fragment| write_fragment(key, fragment, cache_options) }
   end
 
-  def read_fragment(key, cache_options = nil)
+  def read_fragment(key, cache_options = nil) #:nodoc:
     returning self.class.cache_store.read(key, cache_options) do |content|
       logger.info "Component Cache hit: #{key}" unless content.blank?
     end
   end
 
-  def write_fragment(key, content, cache_options = nil)
+  def write_fragment(key, content, cache_options = nil) #:nodoc:
     logger.info "Component Cache miss: #{key}"
     self.class.cache_store.write(key, content, cache_options)
   end
 
-  # TODO: test for consistency in cache key even w. options hashes at the end of args
-  def cache_key(action, args = [])
-    key = ([self.class.path, action] + args).collect do |arg|
+  # generates the cache key for the given action/args
+  def cache_key(action, args = []) #:nodoc:
+    key_pieces = [self.class.path, action] + args
+    if v = cache_version(action, args)
+      key_pieces << "v#{v}"
+    end
+    key = key_pieces.collect do |arg|
       case arg
         when Hash:                arg.to_query # Rails 2.0 compat
         when ActiveRecord::Base:  "#{arg.class.to_s.underscore}#{arg.id}" # note: doesn't apply to record sets
@@ -117,6 +156,20 @@ module Components::Caching
     else
       # Rails 2.0
       key
+    end
+  end
+
+  # returns the versioning configuration for the given action, if any
+  def versioning(action) #:nodoc:
+    (self.send("#{action}_cache_options") || {})[:version]
+  end
+
+  # returns the actual version for a given action/args by calling either
+  # the named method or the configured proc.
+  def cache_version(action, args) #:nodoc:
+    case version = versioning(action)
+      when Proc:   version.call(*args)
+      when Symbol: send(version, *args)
     end
   end
 end

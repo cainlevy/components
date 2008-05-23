@@ -22,14 +22,14 @@ class CachingTest < Test::Unit::TestCase
   end
 
   def test_cache_hit
-    @component.expects(:read_fragment).with("hello_world/say_it/loudly").returns("LOUDLY!")
+    @component.expects(:read_fragment).with("hello_world/say_it/loudly", nil).returns("LOUDLY!")
     @component.expects(:say_it_without_caching).never
     @component.say_it("loudly")
   end
 
   def test_cache_miss
     @component.expects(:read_fragment).returns(nil)
-    @component.expects(:write_fragment).with("hello_world/say_it/frumpamumpa", "frumpamumpa")
+    @component.expects(:write_fragment).with("hello_world/say_it/frumpamumpa", "frumpamumpa", nil)
     assert_equal "frumpamumpa", @component.say_it("frumpamumpa")
   end
 end

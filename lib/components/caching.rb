@@ -54,11 +54,13 @@ module Components::Caching
     # Caches the named actions by wrapping them via alias_method_chain. May only
     # be called on actions (methods) that have already been defined.
     #
-    # NOTE: will eventually accept extra options for TTL or Versioned expiration
-    def cache(action, options = {})
+    # Cache options will be passed through to the cache store's read/write methods.
+    def cache(action, cache_options = nil)
       return unless ActionController::Base.cache_configured?
 
       class_eval <<-EOL, __FILE__, __LINE__
+        cattr_accessor :#{action}_cache_options
+
         def #{action}_with_caching(*args)
           with_caching(:#{action}, args) do
             #{action}_without_caching(*args)
@@ -66,6 +68,7 @@ module Components::Caching
         end
         alias_method_chain :#{action}, :caching
       EOL
+      self.send("#{action}_cache_options=", cache_options)
     end
 
     def cache_store
@@ -83,18 +86,19 @@ module Components::Caching
 
   def with_caching(action, args, &block)
     key = cache_key(action, args)
-    read_fragment(key) || returning(block.call) { |fragment| write_fragment(key, fragment) }
+    cache_options = self.send("#{action}_cache_options")
+    read_fragment(key, cache_options) || returning(block.call) { |fragment| write_fragment(key, fragment, cache_options) }
   end
 
-  def read_fragment(key)
-    returning self.class.cache_store.read(key) do |content|
+  def read_fragment(key, cache_options = nil)
+    returning self.class.cache_store.read(key, cache_options) do |content|
       logger.info "Component Cache hit: #{key}" unless content.blank?
     end
   end
 
-  def write_fragment(key, content)
+  def write_fragment(key, content, cache_options = nil)
     logger.info "Component Cache miss: #{key}"
-    self.class.cache_store.write(key, content)
+    self.class.cache_store.write(key, content, cache_options)
   end
 
   # TODO: test for consistency in cache key even w. options hashes at the end of args
@@ -102,7 +106,7 @@ module Components::Caching
     key = ([self.class.path, action] + args).collect do |arg|
       case arg
         when Hash:                arg.to_query # Rails 2.0 compat
-        when ActiveRecord::Base:  "#{arg.class.to_s.underscore}#{arg.id}"
+        when ActiveRecord::Base:  "#{arg.class.to_s.underscore}#{arg.id}" # note: doesn't apply to record sets
         else                      arg.to_param
       end
     end.join('/')

@@ -2,6 +2,7 @@ module Components
   class Base
     include ::ActionController::UrlWriter
     include ::ActionController::Helpers
+    include ::Components::Caching
 
     # for request forgery protection compatibility
     attr_accessor :form_authenticity_token #:nodoc:
@@ -66,7 +67,7 @@ module Components
       # infer the render file basename from the caller method.
       unless file
         caller.first =~ /`([^']*)'/
-        file = $1
+        file = $1.sub("_without_caching", '')
       end
 
       # pick the closest parent component with the file

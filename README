@@ -35,6 +35,24 @@ Running `script/generator users details` will create a UsersComponent with a "de
 
 == More Features
 
+=== Caching
+
+Any component action may be cached using whatever fragment caching you've configured on ActionController::Base. There is really no configuration to speak of, since every component action is cached with a key based on all of the action's arguments. Expiration of cached actions must then be handled either through a :ttl option (TODO: support this) or a versioning scheme (TODO: support/explain this).
+
+The command to cache a component action must come after the definition of the action itself. This is because the caching method wraps the action, which makes the caching work even if you call the action directly. Arguments are arguments, right?
+
+For example:
+
+  class UsersComponent < Components::Base
+    def details(user_id)
+      @user = User.find(user_id)
+      render
+    end
+    cache :details
+  end
+
+This will cache the returns from UsersComponent#details using a cache key like "users/details/5", where 5 is the user_id.
+
 === Helpers
 
 All of the standard helper functionality exists for components. You may define a method on your component controller and use :helper_method to make it available in your views, or you may use :helper to add entire modules of extra methods to your views.

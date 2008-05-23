@@ -37,7 +37,7 @@ Running `script/generator users details` will create a UsersComponent with a "de
 
 === Caching
 
-Any component action may be cached using whatever fragment caching you've configured on ActionController::Base. There is really no configuration to speak of, since every component action is cached with a key based on all of the action's arguments. Expiration of cached actions must then be handled either through a :ttl option (TODO: support this) or a versioning scheme (TODO: support/explain this).
+Any component action may be cached using whatever fragment caching you've configured on ActionController::Base. There is really no configuration to speak of, since every component action is cached with a key based on all of the action's arguments.
 
 The command to cache a component action must come after the definition of the action itself. This is because the caching method wraps the action, which makes the caching work even if you call the action directly. Arguments are arguments, right?
 
@@ -52,6 +52,16 @@ For example:
   end
 
 This will cache the returns from UsersComponent#details using a cache key like "users/details/5", where 5 is the user_id.
+
+==== Expiration
+
+Expiration of cached actions must then be handled either through a :ttl option or through version arguments. This is because the traditional key-based expiration (e.g. expire_action "foo/bar") don't work well with variable keys, and since component actions are cached based on all arguments, the keys are extremely variable.
+
+Your best bet will be to use cache stores that either:
+  * support a :ttl option to expire fragments after some number of seconds
+  * or limit the amount of cache space so you can simply request fragment versions and let the cache store garbage collect old fragments
+
+As far as I'm aware, this means memcache (or similar) is your best option.
 
 === Helpers
 

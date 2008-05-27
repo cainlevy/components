@@ -55,7 +55,7 @@
 #     cache :show, :expires_in => 15.minutes
 #   end
 #
-# === Versioned Expiration
+# ==== Versioned Expiration
 #
 # Maintaining and incrementing version numbers may be implemented any number of ways. To
 # use the version numbers, though, you can specify a :version option, which may either name
@@ -122,7 +122,19 @@ module Components::Caching
   def with_caching(action, args, &block) #:nodoc:
     key = cache_key(action, args)
     cache_options = self.send("#{action}_cache_options")
-    read_fragment(key, cache_options) || returning(block.call) { |fragment| write_fragment(key, fragment, cache_options) }
+
+    # conditional caching: the prohibited case
+    if cache_options and cache_options[:if] and not call(cache_options[:if], args)
+      fragment = block.call
+    else
+      fragment = read_fragment(key, cache_options)
+      unless fragment
+        fragment = block.call
+        write_fragment(key, fragment, cache_options)
+      end
+    end
+
+    return fragment
   end
 
   def read_fragment(key, cache_options = nil) #:nodoc:
@@ -139,7 +151,8 @@ module Components::Caching
   # generates the cache key for the given action/args
   def cache_key(action, args = []) #:nodoc:
     key_pieces = [self.class.path, action] + args
-    if v = cache_version(action, args)
+
+    if v = call(versioning(action), args)
       key_pieces << "v#{v}"
     end
     key = key_pieces.collect do |arg|
@@ -164,12 +177,12 @@ module Components::Caching
     (self.send("#{action}_cache_options") || {})[:version]
   end
 
-  # returns the actual version for a given action/args by calling either
-  # the named method or the configured proc.
-  def cache_version(action, args) #:nodoc:
-    case version = versioning(action)
-      when Proc:   version.call(*args)
-      when Symbol: send(version, *args)
+  private
+
+  def call(method, args)
+    case method
+      when Proc: method.call(*args)
+      when Symbol: send(method, *args)
     end
   end
 end

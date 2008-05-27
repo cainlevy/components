@@ -21,6 +21,12 @@ class CachingTest < Test::Unit::TestCase
     assert_equal "hello_world/say_it/a=1&b=2", @component.send(:cache_key, :say_it, [{:b => 2, :a => 1}]), "hash keys are ordered"
   end
 
+  def test_conditional_caching
+    @component.say_it_cache_options = {:if => proc{false}}
+    @component.expects(:read_fragment).never
+    assert_equal "trimpanta", @component.say_it("trimpanta")
+  end
+
   def test_cache_hit
     @component.expects(:read_fragment).with("hello_world/say_it/loudly", nil).returns("LOUDLY!")
     @component.expects(:say_it_without_caching).never

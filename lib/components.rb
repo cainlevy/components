@@ -3,14 +3,16 @@ module Components #:nodoc:
     klass, method = name.split('/')
     component = (klass + "_component").camelcase.constantize.new
     component.form_authenticity_token = options[:form_authenticity_token]
+    merge_standard_component_options!(component_args, options[:standard_component_options], component.method(method).arity)
     component.logger.debug "Rendering component #{name}"
     component.send(method, *component_args).to_s
   end
 
-  def self.merge_standard_component_options!(args, standard_options)
+  def self.merge_standard_component_options!(args, standard_options, arity)
     if standard_options
-      args << {} unless args.last.is_a?(Hash)
-      args.last.reverse_merge!(standard_options)
+      # when the method's arity is positive, it only accepts a fixed list of arguments, so we can't add another.
+      args << {} unless args.last.is_a?(Hash) or not arity < 0
+      args.last.reverse_merge!(standard_options) if args.last.is_a?(Hash)
     end
   end
 
@@ -36,8 +38,10 @@ module Components #:nodoc:
     #     end
     #   end
     def component(name, *args)
-      Components.merge_standard_component_options!(args, standard_component_options)
-      Components.render(name, args, :form_authenticity_token => (form_authenticity_token if protect_against_forgery?))
+      Components.render(name, args,
+        :form_authenticity_token => (form_authenticity_token if protect_against_forgery?),
+        :standard_component_options => standard_component_options
+      )
     end
 
     # Override this method on your controller (probably your ApplicationController)
@@ -71,8 +75,10 @@ module Components #:nodoc:
     #     end
     #   end
     def component(name, *args)
-      Components.merge_standard_component_options!(args, controller.send(:standard_component_options))
-      Components.render(name, args, :form_authenticity_token => (form_authenticity_token if protect_against_forgery?))
+      Components.render(name, args,
+        :form_authenticity_token => (form_authenticity_token if protect_against_forgery?),
+        :standard_component_options => controller.send(:standard_component_options)
+      )
     end
   end
 end

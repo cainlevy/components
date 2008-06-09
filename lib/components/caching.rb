@@ -121,16 +121,18 @@ module Components::Caching
 
   def with_caching(action, args, &block) #:nodoc:
     key = cache_key(action, args)
-    cache_options = self.send("#{action}_cache_options")
+    cache_options = self.send("#{action}_cache_options") || {}
+    passthrough_cache_options = cache_options.reject{|k, v| reserved_cache_option_keys.include? k}
+    passthrough_cache_options = nil if cache_options.empty?
 
     # conditional caching: the prohibited case
-    if cache_options and cache_options[:if] and not call(cache_options[:if], args)
+    if cache_options[:if] and not call(cache_options[:if], args)
       fragment = block.call
     else
-      fragment = read_fragment(key, cache_options)
+      fragment = read_fragment(key, passthrough_cache_options)
       unless fragment
         fragment = block.call
-        write_fragment(key, fragment, cache_options)
+        write_fragment(key, fragment, passthrough_cache_options)
       end
     end
 
@@ -177,6 +179,8 @@ module Components::Caching
     (self.send("#{action}_cache_options") || {})[:version]
   end
 
+
+
   private
 
   def call(method, args)
@@ -184,5 +188,9 @@ module Components::Caching
       when Proc: method.call(*args)
       when Symbol: send(method, *args)
     end
+  end
+
+  def reserved_cache_option_keys
+    @reserved_cache_option_keys ||= [:if, :version]
   end
 end

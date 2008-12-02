@@ -19,7 +19,10 @@ module Components
         if read_inheritable_attribute(:view_paths).nil?
           default_path = File.join(RAILS_ROOT, 'app', 'components')
           write_inheritable_attribute(:view_paths, [default_path])
-          ::ActionView::TemplateFinder.process_view_paths([default_path]) if ::ActionView.const_defined?("TemplateFinder") # compat with Rails < 2.1
+          # Rails 2.1 (not 2.0 or 2.2)
+          if ::ActionView.const_defined?("TemplateFinder")
+            ::ActionView::TemplateFinder.process_view_paths([default_path])
+          end
         end
         read_inheritable_attribute(:view_paths)
       end

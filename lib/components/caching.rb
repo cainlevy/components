@@ -170,7 +170,7 @@ module Components::Caching
       ActiveSupport::Cache.expand_cache_key(key, :components)
     else
       # Rails 2.0
-      key
+      "components/#{key}"
     end
   end
 

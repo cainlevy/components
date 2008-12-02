@@ -19,10 +19,6 @@ module Components
         if read_inheritable_attribute(:view_paths).nil?
           default_path = File.join(RAILS_ROOT, 'app', 'components')
           write_inheritable_attribute(:view_paths, [default_path])
-          # Rails 2.1 (not 2.0 or 2.2)
-          if ::ActionView.const_defined?("TemplateFinder")
-            ::ActionView::TemplateFinder.process_view_paths([default_path])
-          end
         end
         read_inheritable_attribute(:view_paths)
       end
@@ -76,12 +72,12 @@ module Components
       # pick the closest parent component with the file
       component = self.class
       unless file.include?("/")
-        until template.file_exists? "#{component.path}/#{file}" or component.superclass == Components::Base
+        until exists?("#{component.path}/#{file}") or component.superclass == Components::Base
           component = component.superclass
         end
       end
 
-      template.render("#{component.path}/#{file}")
+      template.render(:file => "#{component.path}/#{file}")
     end
 
     # creates and returns a view object for rendering the current action.
@@ -105,6 +101,14 @@ module Components
     # should name all of the instance variables used by Components::Base that should _not_ be accessible from the view.
     def unassignable_instance_variables #:nodoc:
       %w(@template @assigns_for_view)
+    end
+    
+    private
+    
+    def exists?(name)
+      template._pick_template(name)
+    rescue ::ActionView::MissingTemplate
+      false
     end
   end
 end

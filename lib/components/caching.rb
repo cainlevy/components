@@ -107,13 +107,7 @@ module Components::Caching
     end
 
     def cache_store #:nodoc:
-      @cache_store ||= if ActionController::Base.respond_to?(:cache_store)
-        # Rails 2.1
-        ActionController::Base.cache_store
-      else
-        # Rails 2.0
-        ActionController::Base.fragment_cache_store
-      end
+      @cache_store ||= ActionController::Base.cache_store
     end
   end
 
@@ -159,27 +153,18 @@ module Components::Caching
     end
     key = key_pieces.collect do |arg|
       case arg
-        when Hash:                arg.to_query # Rails 2.0 compat
         when ActiveRecord::Base:  "#{arg.class.to_s.underscore}#{arg.id}" # note: doesn't apply to record sets
         else                      arg.to_param
       end
     end.join('/')
 
-    if ActiveSupport.const_defined?("Cache")
-      # Rails 2.1
-      ActiveSupport::Cache.expand_cache_key(key, :components)
-    else
-      # Rails 2.0
-      "components/#{key}"
-    end
+    ActiveSupport::Cache.expand_cache_key(key, :components)
   end
 
   # returns the versioning configuration for the given action, if any
   def versioning(action) #:nodoc:
     (self.send("#{action}_cache_options") || {})[:version]
   end
-
-
 
   private
 

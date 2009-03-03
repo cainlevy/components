@@ -1,6 +1,7 @@
 module Components #:nodoc:
   def self.render(name, component_args = [], options = {})
-    klass, method = name.split('/')
+    klass, method = name.split(/\/(?=[^\/]*$)/)
+    
     component = (klass + "_component").camelcase.constantize.new
     component.form_authenticity_token = options[:form_authenticity_token]
     merge_standard_component_options!(component_args, options[:standard_component_options], component.method(method).arity)

@@ -44,6 +44,10 @@ class ComponentsTest < Test::Unit::TestCase
     assert_equal "jingleheimer", Components.render("hello_world/say_it_with_help", ["jingleheimer"])
   end
 
+  def test_namespaced_component
+    assert_equal 'hello world from namespace', Components.render('namespace/hello_world/say_it')
+  end
+
   protected
 
   def assert_select(content, *args)

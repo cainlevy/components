@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-class ComponentsTest < Test::Unit::TestCase
+class ComponentsTest < ActionController::TestCase
   def test_component_response
     HelloWorldComponent.any_instance.expects(:say_it).returns("mukadoogle")
     assert_equal "mukadoogle", Components.render("hello_world/say_it", ["gigglemuppit"])

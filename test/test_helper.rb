@@ -4,7 +4,7 @@ RAILS_ROOT = File.dirname(__FILE__)
 # require support libraries
 require 'test/unit'
 require 'rubygems'
-gem 'rails', '2.2.2'
+gem 'rails', '2.3.2'
 require 'active_support'
 require 'action_controller'
 require 'action_controller/test_process' # for the assertions

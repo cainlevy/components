@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-class ActionControllerTest < Test::Unit::TestCase
+class ActionControllerTest < ActionController::TestCase
   ::ActionController::Routing::Routes.draw do |map|
     map.connect "/:controller/:action/:id"
   end

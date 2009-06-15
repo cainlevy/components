@@ -106,7 +106,7 @@ module Components
     private
     
     def exists?(name)
-      template._pick_template(name)
+      template.render(:file => name)
     rescue ::ActionView::MissingTemplate
       false
     end

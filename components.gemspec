@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
      "README",
      "Rakefile",
      "VERSION.yml",
+     "components.gemspec",
      "generators/component/component_generator.rb",
      "generators/component/templates/component_template.rb",
      "generators/component/templates/view_template.rb",

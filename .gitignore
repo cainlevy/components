@@ -1,2 +1,5 @@
-test/debug.log
+*.sw?
+.DS_Store
+coverage
 rdoc
+pkg

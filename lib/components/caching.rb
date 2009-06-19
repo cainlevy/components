@@ -153,8 +153,10 @@ module Components::Caching
     end
     key = key_pieces.collect do |arg|
       case arg
-        when ActiveRecord::Base:  "#{arg.class.to_s.underscore}#{arg.id}" # note: doesn't apply to record sets
-        else                      arg.to_param
+        when ActiveRecord::Base
+          "#{arg.class.to_s.underscore}#{arg.id}" # note: doesn't apply to record sets
+        else
+          arg.to_param
       end
     end.join('/')
 
@@ -170,8 +172,10 @@ module Components::Caching
 
   def call(method, args)
     case method
-      when Proc: method.call(*args)
-      when Symbol: send(method, *args)
+      when Proc
+        method.call(*args)
+      when Symbol
+        send(method, *args)
     end
   end
 

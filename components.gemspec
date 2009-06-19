@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{components}
-  s.version = "0.0.1"
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Lance Ivy", "Alexander Lang"]
@@ -22,12 +22,12 @@ Gem::Specification.new do |s|
      "generators/component/component_generator.rb",
      "generators/component/templates/component_template.rb",
      "generators/component/templates/view_template.rb",
-     "init.rb",
      "lib/components.rb",
      "lib/components/base.rb",
      "lib/components/caching.rb",
      "lib/components/helpers.rb",
      "lib/components/view.rb",
+     "rails/init.rb",
      "test/action_controller_test.rb",
      "test/app/components/child/one.erb",
      "test/app/components/child_component.rb",

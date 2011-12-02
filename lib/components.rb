@@ -1,5 +1,3 @@
-require 'components/rails'
-
 module Components #:nodoc:
   autoload :Base, 'components/base'
   autoload :View, 'components/view'

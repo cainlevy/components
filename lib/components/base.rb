@@ -13,15 +13,8 @@ module Components
     end
 
     class << self
-      # The view paths to search for templates. Typically this will only be "app/components", but
-      # if you have a plugin that uses Components, it may add its own directory (e.g.
-      # "vendor/plugins/scaffolding/components/" to this array.
       def view_paths
-        if read_inheritable_attribute(:view_paths).nil?
-          default_path = Rails.root.join('app', 'components').to_s
-          write_inheritable_attribute(:view_paths, [default_path])
-        end
-        read_inheritable_attribute(:view_paths)
+        @view_paths ||= ::ActionView::Base.process_view_paths([Rails.root.join('app', 'components')])
       end
 
       def path #:nodoc:
@@ -72,12 +65,14 @@ module Components
 
       # pick the closest parent component with the file
       component = self.class
+      details = {:locale => [], :formats => [], :handlers => ::ActionView::Template::Handlers.extensions}
       unless file.include?("/")
-        until exists?("#{component.path}/#{file}") or component.superclass == Components::Base
+        until component.view_paths.exists?(file, component.path, false, details) or component.superclass == Components::Base
           component = component.superclass
         end
       end
 
+      # render the file
       view_context.render(:file => "#{component.path}/#{file}")
     end
 
@@ -108,15 +103,6 @@ module Components
     # should name all of the instance variables used by Components::Base that should _not_ be accessible from the view.
     def unassignable_instance_variables #:nodoc:
       %w(@template @assigns_for_view)
-    end
-
-    private
-
-    # TODO: get rid of this inefficiency
-    def exists?(name)
-      view_context.render(:file => name)
-    rescue ::ActionView::MissingTemplate
-      false
     end
   end
 end

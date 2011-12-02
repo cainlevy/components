@@ -26,11 +26,16 @@ class ComponentsTest < ActionController::TestCase
     assert_select rendered, "a[href=http://example.com]"
   end
 
-  def test_form_in_views
+  def test_links_in_views
+    ActionController::Base.allow_forgery_protection, old_allow_forgery_protection = true, ActionController::Base.allow_forgery_protection
     ActionController::Base.request_forgery_protection_token = :authenticity_token
-    rendered = Components.render("rich_view/form", [], :form_authenticity_token => "bluetlecrashit")
-    assert_select rendered, "form"
-    assert_select rendered, "input[type=hidden][name=authenticity_token][value=bluetlecrashit]"
+    begin
+      rendered = Components.render("rich_view/form", [], :form_authenticity_token => "bluetlecrashit")
+      assert_select rendered, "form"
+      assert_select rendered, "input[type=hidden][name=authenticity_token][value=bluetlecrashit]"
+    ensure
+      ActionController::Base.allow_forgery_protection = old_allow_forgery_protection
+    end
   end
 
   def test_url_for_in_views

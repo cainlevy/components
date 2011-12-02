@@ -1,7 +1,13 @@
+require 'components/rails'
+
 module Components #:nodoc:
+  autoload :Base, 'components/base'
+  autoload :View, 'components/view'
+  autoload :Caching, 'components/caching'
+
   def self.render(name, component_args = [], options = {})
     klass, method = name.split(/\/(?=[^\/]*$)/)
-    
+
     component = (klass + "_component").camelcase.constantize.new
     component.form_authenticity_token = options[:form_authenticity_token]
     merge_standard_component_options!(component_args, options[:standard_component_options], component.method(method).arity)

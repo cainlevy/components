@@ -1,10 +1,6 @@
 require File.dirname(__FILE__) + '/test_helper'
 
 class ActionControllerTest < ActionController::TestCase
-  ::ActionController::Routing::Routes.draw do |map|
-    map.connect "/:controller/:action/:id"
-  end
-
   def setup
     @controller = HelloWorldController.new
     @request    = ActionController::TestRequest.new

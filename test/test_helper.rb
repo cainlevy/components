@@ -1,24 +1,10 @@
-# fake the rails root
-RAILS_ROOT = File.dirname(__FILE__)
-
-# require support libraries
-require 'test/unit'
+# bootstrap
 require 'rubygems'
-gem 'rails', '2.3.2'
-require 'active_support'
-require 'action_controller'
-require 'action_controller/test_process' # for the assertions
-require 'action_view'
-require 'active_record'
-require 'logger'
+require 'test/unit'
 require 'mocha'
 
-RAILS_DEFAULT_LOGGER = Logger.new(File.dirname(__FILE__) + '/debug.log')
-
-%w(../lib app/controllers).each do |load_path|
-  ActiveSupport::Dependencies.load_paths << File.dirname(__FILE__) + "/" + load_path
-end
-
-require File.dirname(__FILE__) + '/../init'
-
-ActionController::Base.cache_store = :memory_store
+# load the test app, which will load gems
+ENV['RAILS_ENV'] = 'test'
+require File.join(File.dirname(__FILE__), 'r3', 'config', 'environment.rb')
+require 'rails/test_help'
+Rails.backtrace_cleaner.remove_silencers!

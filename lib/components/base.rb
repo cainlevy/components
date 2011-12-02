@@ -1,6 +1,7 @@
 module Components
   class Base
-    include ::ActionController::UrlWriter
+    include Rails.application.routes.url_helpers
+    include ::ActiveSupport::Configurable
     include ::ActionController::Helpers
     include ::Components::Caching
 
@@ -17,7 +18,7 @@ module Components
       # "vendor/plugins/scaffolding/components/" to this array.
       def view_paths
         if read_inheritable_attribute(:view_paths).nil?
-          default_path = File.join(RAILS_ROOT, 'app', 'components')
+          default_path = Rails.root.join('app', 'components').to_s
           write_inheritable_attribute(:view_paths, [default_path])
         end
         read_inheritable_attribute(:view_paths)
@@ -31,7 +32,7 @@ module Components
 
     # must be public for access from ActionView
     def logger #:nodoc:
-      RAILS_DEFAULT_LOGGER
+      Rails.logger
     end
 
     protected
@@ -77,17 +78,23 @@ module Components
         end
       end
 
-      template.render(:file => "#{component.path}/#{file}")
+      view_context.render(:file => "#{component.path}/#{file}")
     end
 
-    # creates and returns a view object for rendering the current action.
-    # note that this freezes knowledge of view_paths and assigns.
-    def template #:nodoc:
-      if @template.nil?
-        @template = Components::View.new(self.class.view_paths, assigns_for_view, self)
-        @template.extend self.class.master_helper_module
+    def view_context #:nodoc:
+      self.class.view_context_class.new(self.class.view_paths, assigns_for_view, self)
+    end
+
+    class << self
+      def view_context_class
+        @view_context_class ||= begin
+          controller = self
+          Class.new(Components::View) do
+            include controller._routes.url_helpers
+            include controller._helpers
+          end
+        end
       end
-      @template
     end
 
     # should return a hash of all instance variables to assign to the view
@@ -102,11 +109,12 @@ module Components
     def unassignable_instance_variables #:nodoc:
       %w(@template @assigns_for_view)
     end
-    
+
     private
-    
+
+    # TODO: get rid of this inefficiency
     def exists?(name)
-      template.render(:file => name)
+      view_context.render(:file => name)
     rescue ::ActionView::MissingTemplate
       false
     end
